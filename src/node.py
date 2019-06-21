@@ -20,7 +20,7 @@ class Node:
 
     def expand(self):
         if not self.left and not self.right:
-            next_maxlen = min(25, int(self.results.maxlen * 0.85))
+            next_maxlen = max(15, int(self.results.maxlen * 0.85))
             self.left = Node(self.min, self.min + self.size / 2, self, maxlen=next_maxlen)
             self.right = Node(self.min + self.size / 2, self.max, self, maxlen=next_maxlen)
 

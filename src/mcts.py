@@ -9,7 +9,7 @@ class Mcts:
 
     resolution = 1e-3
 
-    def __init__(self, root: Node, epsilon = 0.05):
+    def __init__(self, root: Node, epsilon = 0.02):
         self.root = root
         self.expectation = 1
         self.last_tried: Optional[Node] = None
