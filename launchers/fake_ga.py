@@ -2,7 +2,7 @@ import random
 import math
 from ControlledParam import ControlledParam
 
-from mcts import Node
+from nodes import FloatNode
 
 
 class Optimum:
@@ -15,8 +15,8 @@ class Optimum:
     def __repr__(self):
         return f'Optimum at {self.x, self.y} with m={self.mag}, std={self.std}'
 
-x_range = Node(0, 10)
-y_range = Node(-5, -1)
+x_range = FloatNode(0, 10)
+y_range = FloatNode(-5, -1)
 
 
 def random_optimum():
@@ -28,8 +28,8 @@ def random_optimum():
 
 class FakeGa:
 
-    use_x = ControlledParam('x', x_range)
-    use_y = ControlledParam('y', y_range)
+    use_x = ControlledParam('x', 0, 10)
+    use_y = ControlledParam('y', -5, -1)
 
     cps = [use_x, use_y]
 

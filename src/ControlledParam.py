@@ -1,9 +1,12 @@
 from __future__ import annotations
-from typing import Union, Collection, Dict, Any
-from mcts import Mcts, Node
-import copy
 
+from typing import Union, Collection, Dict, Any, Callable
+from numbers import Number
 
+from mcts import Mcts
+from nodes import IntNode, FloatNode
+
+number_or_callable = Union[Callable[[Any], Number], Number]
 
 class ControlledParam:
     """
@@ -23,15 +26,22 @@ class ControlledParam:
         for cp in cps:
             cp._step(unit, result)
 
-    def __init__(self, param_name: str, interval: Node):
+    def __init__(self, param_name: str, min: number_or_callable, max: number_or_callable,
+                 exponential = False, integer = False):
         prefix = self.__class__.__name__
-        self.interval = interval
+        self.min = min
+        self.max = max
+        self.integer = integer
+        self.exponential = exponential
+
         self.mcts_storage_name = f"{prefix}_mcts_{param_name}"
         self.curval_storage_name = f"{prefix}_curval_{param_name}"
 
     def _decide(self, unit):
         mc: Mcts = getattr(unit, self.mcts_storage_name)
         action = mc.decide()
+        if self.exponential:
+            action = 10 ** action
         setattr(unit, self.curval_storage_name, action)
 
     def _step(self, unit, result):
@@ -40,11 +50,28 @@ class ControlledParam:
         self._decide(unit)
 
     def _init(self, unit):
-        mc = Mcts(copy.deepcopy(self.interval))
+
+        try:
+            min = self.min(unit)
+        except TypeError:
+            min = self.min
+
+        try:
+            max = self.max(unit)
+        except TypeError:
+            max = self.max
+
+
+        if self.integer:
+            interval = IntNode(min, max)
+        else:
+            interval = FloatNode(min, max)
+
+        mc = Mcts(interval)
         setattr(unit, self.mcts_storage_name, mc)
         self._decide(unit)
 
-    def __get__(self, unit, _) -> Union[float, None]:
+    def __get__(self, unit, _):
         return getattr(unit, self.curval_storage_name)
 
     def __set__(self, unit, value):
