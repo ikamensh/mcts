@@ -1,6 +1,7 @@
-from exp_range_hard import ExponentialEnv
+from exp_range_time_dependent import TDEnv
 from mcts import Mcts, Node
 import time
+import random
 
 from ilya_ezplot import Metric, plot_group
 
@@ -12,7 +13,7 @@ def one_run(env, n_turns, steepness, noise):
     env.steepness = steepness
     env.noise_factor = noise
 
-    trials = int(2000 * 400 / n_turns)
+    trials = 20
 
     t = time.time()
     metrics_mcts_v3 = []
@@ -25,11 +26,10 @@ def one_run(env, n_turns, steepness, noise):
         done = False
         while not done:
             action = mcts.decide()
+            # action = random.random() * 10
             _, r, done, _ = env.step(action)
             mcts.register(r)
-
-        for j, r in enumerate(root.results):
-            m.add_record(j, r)
+            m.add_record(env.ctr, r)
 
         metrics_mcts_v3.append(m)
 
@@ -39,9 +39,8 @@ def one_run(env, n_turns, steepness, noise):
 
 
     t = time.time()
-    import random
     metrics_rnd = []
-    for i in range(trials):
+    for i in range(trials//4):
 
         env.reset()
         m = Metric('step', 'score')
@@ -63,22 +62,26 @@ def one_run(env, n_turns, steepness, noise):
         'mcts_v3': metrics_mcts_v3,
         'random': sum(metrics_rnd)
     },
-        'temp', name=f'{n_turns}_st{steepness}_n{noise}')
+        'time_dependent', name=f'{n_turns}_st{steepness}_n{noise}')
+
+    time.sleep(1)
 
 if __name__ == '__main__':
 
-    env = ExponentialEnv(max_turns=400)
+    env = TDEnv(max_turns=400)
     print(env)
 
-    for n_turns in [400]:
-        for noise in [9]:
-            processes = []
-            # for noise in [0.3, 1, 3, 9]:
-            for steepness in [2, 6, 10]:
-                p = Process(target=one_run, args=(env, n_turns, steepness, noise))
-                p.start()
-                processes.append(p)
+    one_run(env, 100000, 6, 3)
 
-            for p in processes:
-                p.join()
+    # for n_turns in [400]:
+    #     for noise in [9]:
+    #         processes = []
+    #         # for noise in [0.3, 1, 3, 9]:
+    #         for steepness in [2, 6, 10]:
+    #             p = Process(target=one_run, args=(env, n_turns, steepness, noise))
+    #             p.start()
+    #             processes.append(p)
+    #
+    #         for p in processes:
+    #             p.join()
 

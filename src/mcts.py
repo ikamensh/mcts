@@ -2,22 +2,23 @@ from __future__ import annotations
 from src.node import Node
 from typing import Optional
 import math
+import random
 
 
 class Mcts:
 
     resolution = 1e-3
 
-    def __init__(self, root: Node):
+    def __init__(self, root: Node, epsilon = 0.05):
         self.root = root
         self.expectation = 1
-
         self.last_tried: Optional[Node] = None
+        self.epsilon = epsilon
 
     def prio(self, node: Node):
         if node.results:
             return sum(node.results) / len(node.results) + \
-                   math.sqrt(len(self.root.results)) * self.expectation / len(node.results)
+                   5 * self.expectation / len(node.results)
         else:
             return math.inf
 
@@ -27,7 +28,10 @@ class Mcts:
 
         while best.results and best.size > self.resolution * self.root.size:
             best.expand()
-            best = max(best.left, best.right, key=lambda n: self.prio(n))
+            if self.epsilon > random.random():
+                best = random.choice([best.left, best.right])
+            else:
+                best = max(best.left, best.right, key=lambda n: self.prio(n))
 
         return best
 
